@@ -2,7 +2,7 @@ NAME
   bj
 
 SYNOPSIS
-  bj (migration_code|generate_migration|migrate|setup|plugin|run|submit|list|set|config|pid) [options]+
+  bj (migration_code|generate_migration|migrate|setup|plugin|run|submit|list|set|config|pid|kill) [options]+
 
 DESCRIPTION
   ________________________________
@@ -287,7 +287,7 @@ DESCRIPTION
   ________________________________
   Version
   --------------------------------
-  1.0.1
+  1.0.2
 
 PARAMETERS
   --rails_root=rails_root, -R (0 ~> rails_root=) 
