@@ -489,6 +489,8 @@ txt
   end
 
   mode "pid" do
+    description "Show daemon pid [for specified host]"
+
     option("hostname", "H"){
       argument :required
       default Bj.hostname
@@ -498,6 +500,48 @@ txt
       Bj.transaction do
         config = Bj.table.config.for(:hostname => param["hostname"].value)
         puts config[ Bj::Runner.key ] if config
+      end
+    end
+  end
+
+  mode "kill" do
+    description <<-txt
+Kill the daemon running on this host, according to the pid stored in
+the config table.
+
+This should leave running tasks to finish, but will not the record
+output or finished_at time.  As a result, the task may be restarted
+next time the daemon runs.
+
+If the daemon had already been killed in such a way that its demise
+was not recorded (e.g. 'kill -9' or system crash), and some other has
+process landed on the old pid by chance, it will be killed instead.
+This is unlikely but unfortunate.
+txt
+
+    # (don't accept hostname, we can't do remote kill)
+
+    # TODO: risk of unfortunate kill could be removed if the daemon
+    # held a lock on its pid in the database.  If you can't delete the
+    # row, the process is still there for killing.
+
+    def run
+      Bj.transaction do
+        config = Bj.table.config.for(:hostname => Bj.hostname)
+        pid = config && config[ Bj::Runner.key ]
+        if pid
+          Bj.logger.info{ "kill(#{pid})" }
+          begin
+            Process.kill(Bj::Runner.kill_signal, pid)
+          rescue Errno::ESRCH => e
+            # Kill failed.  PID in config is wrong, so clear it.
+            config.delete Bj::Runner.key
+# TODO: config.delete does not work?! 
+            Bj.logger.warn "kill(#{pid}) failed, #{e}; pid cleared"
+          end
+        else
+          puts "No daemon found"
+        end
       end
     end
   end
