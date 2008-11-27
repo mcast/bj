@@ -497,7 +497,7 @@ txt
     def run
       Bj.transaction do
         config = Bj.table.config.for(:hostname => param["hostname"].value)
-        puts config[ "#{ RAILS_ENV }.pid" ] if config
+        puts config[ Bj::Runner.key ] if config
       end
     end
   end
