@@ -606,6 +606,12 @@ txt
           Dir::chdir RAILS_ROOT
           File::umask 0
           $DAEMON = true
+          r.close
+          w.close
+# TODO: We need to close other fds, too.
+#  - pipes inherited from parent shell; unless "bj start --daemon </dev/null >/dev/null 2>&1"
+#  - what have we opened, that we need to keep?
+#  - should we "require 'daemons/daemonize'" instead of doing this by hand?
           yield # to the daemon block
           exit!
         end
