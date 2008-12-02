@@ -577,7 +577,9 @@ txt
   def daemon
     ra, wa = IO.pipe
     rb, wb = IO.pipe
+    # Commence "double fork"
     if fork
+      # Parent
       at_exit{ exit! }
       wa.close
       r = ra
@@ -587,6 +589,7 @@ txt
       w.puts pid
       Integer pid.strip
     else
+      # First child: disposable process
       ra.close
       w = wa
       wb.close
@@ -599,14 +602,15 @@ txt
       Process::setsid rescue nil
       pid =
         fork do
+          # Inner child: the daemon
           Dir::chdir RAILS_ROOT
           File::umask 0
           $DAEMON = true
-          yield
+          yield # to the daemon block
           exit!
         end
-      w.puts pid
-      r.gets
+      w.puts pid # tell top parent the daemon pid
+      r.gets # (?) await confirmation reply to avoid premature exit
       exit!
     end
   end
